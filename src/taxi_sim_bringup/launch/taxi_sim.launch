@@ -1,0 +1,83 @@
+<?xml version="1.0"?>
+<launch>
+  <!-- ─────────────────────────────────────────────────
+       Arguments
+  ───────────────────────────────────────────────── -->
+  <arg name="mode"       default="day"/>     <!-- day | day_empty | night -->
+  <arg name="drive_mode" default="manual"/>  <!-- manual | auto -->
+  <arg name="gui"        default="true"/>
+
+  <!-- ─────────────────────────────────────────────────
+       1. Launch racetrack world (no robot)
+  ───────────────────────────────────────────────── -->
+  <include file="$(find aws_robomaker_racetrack_world)/launch/racetrack.launch">
+    <arg name="gui"  value="$(arg gui)"/>
+    <arg name="mode" value="$(arg mode)"/>
+  </include>
+
+  <!-- ─────────────────────────────────────────────────
+       2. Prius — robot description + spawn
+       (cherry picked from car_demo/launch/demo.launch,
+        world loading stripped out)
+  ───────────────────────────────────────────────── -->
+  <param name="robot_description"
+         textfile="$(find prius_description)/urdf/prius.urdf"/>
+
+  <node pkg="robot_state_publisher" type="robot_state_publisher"
+        name="robot_state_publisher"/>
+
+  <node pkg="fake_localization" type="fake_localization"
+        name="fake_localization"/>
+
+  <node pkg="tf2_ros" type="static_transform_publisher"
+        name="very_inaccurate_odom"
+        args="0 0 0 0 0 0 odom base_link"/>
+
+  <!-- Spawn Prius at racetrack start line -->
+  <node name="spawn_urdf" pkg="gazebo_ros" type="spawn_model"
+        args="-param robot_description -urdf -x 2.75 -y -14.0 -z 0.5 -model prius"/>
+
+  <!-- Joystick (won't crash if no joystick connected) -->
+  <node pkg="car_demo" type="joystick_translator" name="joystick_translator"/>
+  <node pkg="joy" type="joy_node" name="joy_node0" required="false">
+    <param name="dev" value="/dev/input/js0"/>
+  </node>
+
+  <!-- ─────────────────────────────────────────────────
+       3. topic_tools/mux — auto/manual toggle
+          /teleop/cmd_vel  <- keyboard (manual)
+          /nav/cmd_vel     <- autonomous planner (auto)
+  ───────────────────────────────────────────────── -->
+  <node name="drive_mux" pkg="topic_tools" type="mux"
+        args="/prius/cmd_vel /teleop/cmd_vel /nav/cmd_vel"
+        output="screen">
+    <param name="initial_topic" value="/teleop/cmd_vel"/>
+  </node>
+
+  <!-- ─────────────────────────────────────────────────
+       4. Keyboard teleop (manual drive mode)
+  ───────────────────────────────────────────────── -->
+  <node name="teleop_keyboard" pkg="teleop_twist_keyboard"
+        type="teleop_twist_keyboard.py"
+        output="screen"
+        launch-prefix="xterm -e">
+    <remap from="cmd_vel" to="/teleop/cmd_vel"/>
+  </node>
+
+  <!-- ─────────────────────────────────────────────────
+       5. Drive mode toggle node
+  ───────────────────────────────────────────────── -->
+  <node name="drive_mode_toggle" pkg="taxi_sim_bringup"
+        type="drive_mode_toggle.py"
+        output="screen">
+    <param name="initial_mode" value="$(arg drive_mode)"/>
+  </node>
+
+  <!-- ─────────────────────────────────────────────────
+       6. RViz — reuse car_demo's existing rviz config
+  ───────────────────────────────────────────────── -->
+  <node name="rviz" pkg="rviz" type="rviz"
+        args="-d $(find car_demo)/rviz/demo.rviz"
+        output="screen"/>
+
+</launch>
