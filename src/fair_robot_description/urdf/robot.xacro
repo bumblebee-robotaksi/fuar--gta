@@ -1,7 +1,28 @@
 <?xml version="1.0"?>
 
 <robot xmlns:xacro="https://wiki.ros.org/xacro" name="robot">
+
 <xacro:property name="pi" value="3.14159265359" />
+
+    <xacro:macro name="inertial_box" params="mass x y z *origin">
+        <inertial>
+            <xacro:insert_block name="origin"/>
+            <mass value="${mass}" />
+            <inertia ixx="${(1/12) * mass * (y*y + z*z)}" ixy="0.0" ixz="0.0"
+                    iyy="${(1/12) * mass * (x*x + z*z)}" iyz="0.0"
+                    izz="${(1/12) * mass * (x*x + y*y)}" />
+        </inertial>
+    </xacro:macro>
+
+    <xacro:macro name="inertial_cylinder" params="mass length radius *origin">
+        <inertial>
+            <xacro:insert_block name="origin"/>
+            <mass value="${mass}" />
+            <inertia ixx="${(1/12) * mass * (3*radius*radius + length*length)}" ixy="0.0" ixz="0.0"
+                    iyy="${(1/12) * mass * (3*radius*radius + length*length)}" iyz="0.0"
+                    izz="${(1/2) * mass * (radius*radius)}" />
+        </inertial>
+    </xacro:macro>
 
     <!-- Materials -->
     <material name="white">
@@ -36,6 +57,9 @@
                 <box size="2.74 1.06 1.785"/>
             </geometry>
         </collision>
+        <xacro:inertial_box mass="700" x="2.74" y="1.06" z="1.785">
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+        </xacro:inertial_box>
     </link>
 
     <!-- Front Left Wheel -->
@@ -60,6 +84,9 @@
                 <cylinder radius="0.25" length="0.15"/>
             </geometry>
         </collision>
+        <xacro:inertial_cylinder mass="15" length="0.15" radius="0.25">
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+        </xacro:inertial_cylinder>
     </link>
 
     <!-- Front Right Wheel -->
@@ -84,6 +111,9 @@
                 <cylinder radius="0.25" length="0.15"/>
             </geometry>
         </collision>
+        <xacro:inertial_cylinder mass="15" length="0.15" radius="0.25">
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+        </xacro:inertial_cylinder>
     </link>
 
     <!-- Rear Left Wheel -->
@@ -108,6 +138,9 @@
                 <cylinder radius="0.25" length="0.15"/>
             </geometry>
         </collision>
+        <xacro:inertial_cylinder mass="15" length="0.15" radius="0.25">
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+        </xacro:inertial_cylinder>
     </link>
 
     <!-- Rear Right Wheel -->
@@ -132,6 +165,9 @@
                 <cylinder radius="0.25" length="0.15"/>
             </geometry>
         </collision>
+        <xacro:inertial_cylinder mass="15" length="0.15" radius="0.25">
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+        </xacro:inertial_cylinder>
     </link>
 
 </robot>
