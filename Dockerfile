@@ -50,9 +50,18 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # ─────────────────────────────────────────────
-# 2. rosdep init
+# 2. Extra deps — explicit apt, no rosdep
+#    (rosdep segfaults on WSL2 + Ubuntu 18.04)
 # ─────────────────────────────────────────────
-RUN rosdep init && rosdep update
+RUN apt-get update && apt-get install -y \
+    ros-melodic-xacro \
+    ros-melodic-ackermann-msgs \
+    ros-melodic-effort-controllers \
+    ros-melodic-velocity-controllers \
+    ros-melodic-joint-state-controller \
+    ros-melodic-robot-localization \
+    ros-melodic-twist-mux \
+    && rm -rf /var/lib/apt/lists/*
 
 # ─────────────────────────────────────────────
 # 3. Copy workspace into container
@@ -61,10 +70,9 @@ WORKDIR /taxi_ws
 COPY src/ src/
 
 # ─────────────────────────────────────────────
-# 4. Install deps and build
+# 4. Build (no rosdep, all deps already installed)
 # ─────────────────────────────────────────────
 RUN /bin/bash -c "source /opt/ros/melodic/setup.bash && \
-    rosdep install --from-paths src --ignore-src -r -y && \
     catkin_make"
 
 # ─────────────────────────────────────────────

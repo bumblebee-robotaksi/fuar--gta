@@ -1,0 +1,39 @@
+# ─────────────────────────────────────────────────────────
+# Usage:
+#   With NVIDIA GPU:   docker compose --profile gpu up
+#   Without GPU:       docker compose --profile cpu up
+# ─────────────────────────────────────────────────────────
+
+x-base: &base
+  build: .
+  environment:
+    - DISPLAY=${DISPLAY}
+    - LIBGL_ALWAYS_SOFTWARE=0
+  volumes:
+    # X11 socket so Gazebo/RViz window appears on your host
+    - /tmp/.X11-unix:/tmp/.X11-unix:rw
+  network_mode: host
+  stdin_open: true
+  tty: true
+  command: roslaunch taxi_sim_bringup taxi_sim.launch
+
+services:
+  # ── GPU version ──────────────────────────────────────
+  taxi_sim_gpu:
+    <<: *base
+    profiles: ["gpu"]
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu, display]
+
+  # ── CPU / software rendering version ─────────────────
+  taxi_sim_cpu:
+    <<: *base
+    profiles: ["cpu"]
+    environment:
+      - DISPLAY=${DISPLAY}
+      - LIBGL_ALWAYS_SOFTWARE=1   # force Mesa software renderer

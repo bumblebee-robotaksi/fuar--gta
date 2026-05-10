@@ -1,0 +1,26 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>taxi_sim_bringup</name>
+  <version>0.1.0</version>
+  <description>
+    Bringup package for the GTA-style taxi simulator.
+    Spawns a Prius in the AWS racetrack world with
+    switchable manual / auto drive modes.
+  </description>
+
+  <maintainer email="you@example.com">Your Name</maintainer>
+  <license>Apache-2.0</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <depend>rospy</depend>
+  <depend>std_msgs</depend>
+  <depend>std_srvs</depend>
+  <depend>geometry_msgs</depend>
+  <depend>topic_tools</depend>
+  <depend>teleop_twist_keyboard</depend>
+  <depend>car_demo</depend>
+  <depend>aws_robomaker_racetrack_world</depend>
+
+  <export></export>
+</package>
