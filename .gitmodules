@@ -1,0 +1,7 @@
+[submodule "src/car_demo"]
+	path = src/car_demo
+	url = https://github.com/osrf/car_demo
+[submodule "src/racetrack_world"]
+	path = src/racetrack_world
+	url = https://github.com/aws-robotics/aws-robomaker-racetrack-world
+	branch = ros1
