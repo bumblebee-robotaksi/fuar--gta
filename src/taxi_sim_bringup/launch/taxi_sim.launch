@@ -53,7 +53,7 @@
   <node name="keyboard_translator" pkg="taxi_sim_bringup"
         type="keyboard_translator.py"
         output="screen"
-        launch-prefix="xterm -e"/>
+  />
 
   <!-- ─────────────────────────────────────────────────
        5. Drive mode toggle node

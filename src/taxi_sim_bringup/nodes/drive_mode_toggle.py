@@ -1,6 +1,7 @@
 #!/usr/bin/env python
-# drive_mode_toggle.py — Python 2.7 compatible
-# Switches between manual and auto drive mode via mux
+# -*- coding: utf-8 -*-
+# drive_mode_toggle.py
+# Switches between manual and auto drive mode
 #
 # Services:
 #   /set_drive_mode (std_srvs/SetBool)
@@ -29,7 +30,7 @@ class DriveModeToggle:
             self.mux_select = rospy.ServiceProxy('/drive_mux/select', MuxSelect)
             rospy.loginfo('[DriveModeToggle] Mux found!')
         except rospy.ROSException:
-            rospy.logwarn('[DriveModeToggle] Mux not found, toggle will retry on use')
+            rospy.logwarn('[DriveModeToggle] Mux not found, will retry on use')
             self.mux_select = None
 
         rospy.Service('/set_drive_mode', SetBool, self.handle_set_mode)
@@ -39,30 +40,24 @@ class DriveModeToggle:
     def handle_set_mode(self, req):
         new_mode = 'auto' if req.data else 'manual'
         self._apply_mode(new_mode)
-        return SetBoolResponse(
-            success=True,
-            message='Switched to ' + new_mode)
+        return SetBoolResponse(success=True, message='Switched to ' + new_mode)
 
     def _apply_mode(self, mode):
         topic = '/nav/cmd_vel' if mode == 'auto' else '/teleop/cmd_vel'
-        if self.mux_select is not None:
-            try:
-                self.mux_select(topic)
-                self.mode = mode
-                self.mode_pub.publish(String(data=mode))
-                rospy.loginfo('[DriveModeToggle] -> %s mode', mode)
-            except rospy.ServiceException as e:
-                rospy.logerr('[DriveModeToggle] Mux switch failed: %s', e)
-        else:
-            # retry connecting to mux
+        if self.mux_select is None:
             try:
                 rospy.wait_for_service('/drive_mux/select', timeout=3.0)
                 self.mux_select = rospy.ServiceProxy('/drive_mux/select', MuxSelect)
-                self.mux_select(topic)
-                self.mode = mode
-                self.mode_pub.publish(String(data=mode))
             except Exception as e:
                 rospy.logerr('[DriveModeToggle] Could not reach mux: %s', e)
+                return
+        try:
+            self.mux_select(topic)
+            self.mode = mode
+            self.mode_pub.publish(String(data=mode))
+            rospy.loginfo('[DriveModeToggle] Switched to %s mode', mode)
+        except rospy.ServiceException as e:
+            rospy.logerr('[DriveModeToggle] Mux switch failed: %s', e)
 
     def spin(self):
         rospy.spin()
