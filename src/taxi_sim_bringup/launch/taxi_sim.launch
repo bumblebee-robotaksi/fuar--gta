@@ -8,7 +8,7 @@
   <arg name="gui"        default="true"/>
 
   <!-- ─────────────────────────────────────────────────
-       1. Launch racetrack world (no robot)
+       1. Launch racetrack world
   ───────────────────────────────────────────────── -->
   <include file="$(find aws_robomaker_racetrack_world)/launch/racetrack.launch">
     <arg name="gui"  value="$(arg gui)"/>
@@ -16,18 +16,13 @@
   </include>
 
   <!-- ─────────────────────────────────────────────────
-       2. Prius — robot description + spawn
-       (cherry picked from car_demo/launch/demo.launch,
-        world loading stripped out)
+       2. Prius robot description + spawn
   ───────────────────────────────────────────────── -->
   <param name="robot_description"
          textfile="$(find prius_description)/urdf/prius.urdf"/>
 
   <node pkg="robot_state_publisher" type="robot_state_publisher"
         name="robot_state_publisher"/>
-
-  <node pkg="fake_localization" type="fake_localization"
-        name="fake_localization"/>
 
   <node pkg="tf2_ros" type="static_transform_publisher"
         name="very_inaccurate_odom"
@@ -36,12 +31,6 @@
   <!-- Spawn Prius at racetrack start line -->
   <node name="spawn_urdf" pkg="gazebo_ros" type="spawn_model"
         args="-param robot_description -urdf -x 2.75 -y -14.0 -z 0.5 -model prius"/>
-
-  <!-- Joystick (won't crash if no joystick connected) -->
-  <node pkg="car_demo" type="joystick_translator" name="joystick_translator"/>
-  <node pkg="joy" type="joy_node" name="joy_node0" required="false">
-    <param name="dev" value="/dev/input/js0"/>
-  </node>
 
   <!-- ─────────────────────────────────────────────────
        3. topic_tools/mux — auto/manual toggle
@@ -55,14 +44,16 @@
   </node>
 
   <!-- ─────────────────────────────────────────────────
-       4. Keyboard teleop (manual drive mode)
+       4. Keyboard control (manual drive mode)
+         W/S = throttle/brake
+         A/D = steer left/right
+         F/R/N = gear Forward/Reverse/Neutral
+         SPACE = emergency brake
   ───────────────────────────────────────────────── -->
-  <node name="teleop_keyboard" pkg="teleop_twist_keyboard"
-        type="teleop_twist_keyboard.py"
+  <node name="keyboard_translator" pkg="taxi_sim_bringup"
+        type="keyboard_translator.py"
         output="screen"
-        launch-prefix="xterm -e">
-    <remap from="cmd_vel" to="/teleop/cmd_vel"/>
-  </node>
+        launch-prefix="xterm -e"/>
 
   <!-- ─────────────────────────────────────────────────
        5. Drive mode toggle node
@@ -74,7 +65,7 @@
   </node>
 
   <!-- ─────────────────────────────────────────────────
-       6. RViz — reuse car_demo's existing rviz config
+       6. RViz
   ───────────────────────────────────────────────── -->
   <node name="rviz" pkg="rviz" type="rviz"
         args="-d $(find car_demo)/rviz/demo.rviz"
